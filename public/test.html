@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        function callChild(obj) {
+            var command = obj.innerText;
+            console.log(command)
+            var iframe = document.getElementById('child'); //先找到ifram
+            iframe.contentWindow.terminal.paste(command + "\r"); //用dom对象调用子页面的方法
+        }
+
+        function reinitIframe() {
+            var iframe = document.getElementById("child");
+            try {
+                var bHeight = iframe.contentWindow.document.body.scrollHeight;
+                var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                var height = Math.max(bHeight, dHeight);
+                iframe.height = height;
+            } catch (ex) {
+            }
+        }
+
+        window.setInterval("reinitIframe()", 200);
+    </script>
+</head>
+<body>
+<a href="javascript:void(0);" onClick="callChild(this)">date</a>
+<br>
+<a href="javascript:void(0);" onclick="callChild(this)">kubectl get pods </a>
+<br>
+<a href="javascript:void(0);" onclick="callChild(this)">whoami</a>
+<br>
+<iframe name="child" id="child" src="/codeshell.html" width="100%" height="auto">
+</iframe>
+</body>
+</html>

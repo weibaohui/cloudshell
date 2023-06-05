@@ -1,8 +1,6 @@
 package main
 
 import (
-	"cloudshell/internal/log"
-	"cloudshell/pkg/xtermjs"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +8,9 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"cloudshell/internal/log"
+	"cloudshell/pkg/xtermjs"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -77,7 +78,7 @@ func runE(_ *cobra.Command, _ []string) error {
 
 	// configure routing
 	router := mux.NewRouter()
-
+	router.Use(mux.CORSMethodMiddleware(router))
 	// this is the endpoint for xterm.js to connect to
 	xtermjsHandlerOptions := xtermjs.HandlerOpts{
 		AllowedHostnames:     allowedHostnames,
@@ -91,7 +92,7 @@ func runE(_ *cobra.Command, _ []string) error {
 		KeepalivePingTimeout: keepalivePingTimeout,
 		MaxBufferSizeBytes:   maxBufferSizeBytes,
 	}
-	router.HandleFunc(pathXTermJS, xtermjs.GetHandler(xtermjsHandlerOptions))
+	router.HandleFunc(pathXTermJS, xtermjs.GetHandler(xtermjsHandlerOptions)).Methods(http.MethodGet, http.MethodPut, http.MethodOptions)
 
 	// readiness probe endpoint
 	router.HandleFunc(pathReadiness, func(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +117,7 @@ func runE(_ *cobra.Command, _ []string) error {
 
 	// this is the endpoint for serving xterm.js assets
 	depenenciesDirectory := path.Join(workingDirectory, "./node_modules")
-	router.PathPrefix("/assets").Handler(http.StripPrefix("/assets", http.FileServer(http.Dir(depenenciesDirectory))))
+	router.PathPrefix("/assets").Handler(http.StripPrefix("/assets", http.FileServer(http.Dir(depenenciesDirectory)))).Methods(http.MethodGet, http.MethodPut, http.MethodOptions)
 
 	// this is the endpoint for the root path aka website
 	publicAssetsDirectory := path.Join(workingDirectory, "./public")
@@ -140,4 +141,11 @@ func runE(_ *cobra.Command, _ []string) error {
 
 	log.Infof("starting server on interface:port '%s'...", listenOnAddress)
 	return server.ListenAndServe()
+}
+func corsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+	w.Write([]byte("Cors Request"))
 }

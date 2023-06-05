@@ -1,4 +1,3 @@
-(function() {
   var terminal = new Terminal({
     screenKeys: true,
     useStyle: true,
@@ -8,7 +7,7 @@
     screenReaderMode: true,
     cols: 128,
   });
-  terminal.open(document.getElementById("terminal"));
+  terminal.open(document.getElementById("_terminal"));
   var protocol = (location.protocol === "https:") ? "wss://" : "ws://";
   var url = protocol + location.host + "/xterm.js"
   var ws = new WebSocket(url);
@@ -45,4 +44,3 @@
       fitAddon.fit();
     };
   };
-})();
